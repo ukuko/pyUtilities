@@ -31,24 +31,26 @@ import fnmatch
 import re
 import logging
 
+
 class Renamer:
     def __init__(self, args):
-        self.directory = args['--directory']
-        self.pattern = args['--pattern']
-        self.replacement = args['--replacement']
+        self.directory = args["--directory"]
+        self.pattern = args["--pattern"]
+        self.replacement = args["--replacement"]
 
         self.verbose = False
 
-        self.ignore_folders = args['--ignore-folders'].split(',') if args['--ignore-folders'] else []
-        self.recursive = args['--recursive']
-        self.dry_run = True if args['--dry-run'] else False
-        self.verbose = args['--verbose']
+        self.ignore_folders = (
+            args["--ignore-folders"].split(",") if args["--ignore-folders"] else []
+        )
+        self.recursive = args["--recursive"]
+        self.dry_run = True if args["--dry-run"] else False
+        self.verbose = args["--verbose"]
 
         self.logger = self._setup_logger()
 
-
     def _setup_logger(self):
-        self.logger = logging.getLogger('Renamer')
+        self.logger = logging.getLogger("Renamer")
         self.logger.setLevel(logging.DEBUG if self.verbose else logging.INFO)
 
         # # Log to console
@@ -70,17 +72,16 @@ class Renamer:
         self.logger.addHandler(ch)
         return self.logger
 
-
     def is_folder_ignored(self, folder_name):
-        self.logger.debug("Processing")        
+        self.logger.debug("Processing")
         return folder_name in self.ignore_folders
 
     def rename_files(self):
-        self.logger.debug("Processing")        
+        self.logger.debug("Processing")
         try:
             for root, dirs, files in os.walk(self.directory):
                 dirs[:] = [d for d in dirs if not self.is_folder_ignored(d)]
-                for filename in fnmatch.filter(files, f'*{self.pattern}*'):
+                for filename in fnmatch.filter(files, f"*{self.pattern}*"):
                     old_path = os.path.join(root, filename)
                     new_filename = filename.replace(self.pattern, self.replacement)
                     new_path = os.path.join(root, new_filename)
@@ -94,14 +95,14 @@ class Renamer:
             sys.exit(1)
 
     def rename_strings(self):
-        self.logger.debug("Processing")        
+        self.logger.debug("Processing")
         try:
             for root, dirs, files in os.walk(self.directory):
                 dirs[:] = [d for d in dirs if not self.is_folder_ignored(d)]
-                for filename in fnmatch.filter(files, '*.*'):
+                for filename in fnmatch.filter(files, "*.*"):
                     file_path = os.path.join(root, filename)
 
-                    with open(file_path, 'r') as file:
+                    with open(file_path, "r") as file:
                         content = file.read()
 
                     new_content = re.sub(self.pattern, self.replacement, content)
@@ -110,20 +111,21 @@ class Renamer:
                         self.logger.debug(f"Updating file: {file_path}")
 
                         if not self.dry_run:
-                            with open(file_path, 'w') as file:
+                            with open(file_path, "w") as file:
                                 file.write(new_content)
         except Exception as e:
             self.logger.error(f"An error occurred during string renaming: {e}")
             sys.exit(1)
 
     def run_command(self):
-        self.logger.debug("Processing")        
-        if args['rename-files']:
+        self.logger.debug("Processing")
+        if args["rename-files"]:
             self.rename_files()
-        elif args['rename-strings']:
+        elif args["rename-strings"]:
             self.rename_strings()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from docopt import docopt
 
     args = docopt(__doc__)
